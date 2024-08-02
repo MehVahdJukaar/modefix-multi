@@ -1,21 +1,26 @@
 package net.mehvahdjukaar.modelfix.moonlight_configs.fabric;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.Codec;
 import net.mehvahdjukaar.modelfix.moonlight_configs.ConfigBuilder;
 import net.mehvahdjukaar.modelfix.moonlight_configs.ConfigType;
+import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.ConfigSubCategory;
+import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.FabricConfigSpec;
 import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.values.*;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.http.annotation.Experimental;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+
+import static net.mehvahdjukaar.modelfix.moonlight_configs.ConfigSpec.getReadableName;
 
 /**
- * Author: MehVhadJukaar
+ * Author: MehVahdJukaar
  */
 public class ConfigBuilderImpl extends ConfigBuilder {
 
@@ -25,25 +30,22 @@ public class ConfigBuilderImpl extends ConfigBuilder {
 
     private final ConfigSubCategory mainCategory = new ConfigSubCategory(this.getName().getNamespace());
 
-    private final Stack<ConfigSubCategory> categoryStack = new Stack<>();
+    private final Deque<ConfigSubCategory> categoryStack = new ArrayDeque<>();
 
     public ConfigBuilderImpl(ResourceLocation name, ConfigType type) {
         super(name, type);
         categoryStack.push(mainCategory);
     }
 
+    //doesn't load it immediately. happens after registration to mimic forge
     @NotNull
     public FabricConfigSpec build() {
         assert categoryStack.size() == 1;
-        FabricConfigSpec spec = new FabricConfigSpec(this.getName(),
-                mainCategory, this.type, this.synced, this.changeCallback);
-        spec.loadFromFile();
-        spec.saveConfig();
-        return spec;
+        return new FabricConfigSpec(this.getName(), mainCategory, this.type, this.changeCallback);
     }
 
     @Override
-    protected String currentCategory() {
+    public String currentCategory() {
         return categoryStack.peek().getName();
     }
 
@@ -54,6 +56,7 @@ public class ConfigBuilderImpl extends ConfigBuilder {
         categoryStack.push(cat);
         return this;
     }
+
 
     @Override
     public ConfigBuilderImpl pop() {
@@ -67,12 +70,12 @@ public class ConfigBuilderImpl extends ConfigBuilder {
         maybeAddTranslationString(name);
         var tooltipKey = this.tooltipKey(name);
         if (this.comments.containsKey(tooltipKey)) {
-            config.setDescriptionKey(comments.get(tooltipKey));
+            config.setDescriptionKey(tooltipKey);
         }
 
         this.categoryStack.peek().addEntry(config);
+        if (this.categoryStack.size() <= 1) throw new AssertionError();
     }
-
 
     @Override
     public Supplier<Boolean> define(String name, boolean defaultValue) {
@@ -89,16 +92,17 @@ public class ConfigBuilderImpl extends ConfigBuilder {
         return config;
     }
 
+    @Experimental
     @Override
-    public Supplier<Integer> define(String name, int defaultValue, int min, int max) {
-        var config = new IntConfigValue(name, defaultValue, min, max);
+    public Supplier<Float> define(String name, float defaultValue, float min, float max) {
+        var config = new FloatConfigValue(name, defaultValue, min, max);
         doAddConfig(name, config);
         return config;
     }
 
     @Override
-    public Supplier<Integer> defineColor(String name, int defaultValue) {
-        var config = new ColorConfigValue(name, defaultValue);
+    public Supplier<Integer> define(String name, int defaultValue, int min, int max) {
+        var config = new IntConfigValue(name, defaultValue, min, max);
         doAddConfig(name, config);
         return config;
     }
@@ -124,19 +128,27 @@ public class ConfigBuilderImpl extends ConfigBuilder {
         return config;
     }
 
-    @Override
-    public <T> Supplier<List<? extends T>> defineForgeList(String path, List<? extends T> defaultValue, Predicate<Object> elementValidator) {
-        return () -> defaultValue;
-    }
+
 
     @Override
     protected void maybeAddTranslationString(String name) {
-       // comments.put(this.translationKey(name), getReadableName(name));
+        comments.put(this.translationKey(name), getReadableName(name));
         super.maybeAddTranslationString(name);
     }
 
-    public static String getReadableName(String name) {
-        return Arrays.stream((name).replace(":", "_").split("_"))
-                .map(StringUtils::capitalize).collect(Collectors.joining(" "));
+    //NYI
+    @Override
+    public ConfigBuilder gameRestart() {
+        return this;
+    }
+
+    @Override
+    public ConfigBuilder worldReload() {
+        return this;
+    }
+
+    @Override
+    public ConfigBuilder comment(String comment) {
+        return super.comment(comment);
     }
 }

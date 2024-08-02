@@ -15,7 +15,7 @@ public class ColorConfigValue extends IntConfigValue {
         if (element.has(this.name)) {
             try {
                 String s = element.get(this.name).getAsString();
-                if (ConfigBuilder.COLOR_CHECK.test(s)) return;
+             //   if (ConfigBuilder.COLOR_CHECK.test(s)) return;
                 //if not valid it defaults
                 this.value = defaultValue;
             } catch (Exception ignored) {

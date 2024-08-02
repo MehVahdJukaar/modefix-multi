@@ -60,7 +60,7 @@ public class ModelFix {
             }
         });
 
-        config = builder.buildAndRegister();
+        config = builder.build();
     }
 
 

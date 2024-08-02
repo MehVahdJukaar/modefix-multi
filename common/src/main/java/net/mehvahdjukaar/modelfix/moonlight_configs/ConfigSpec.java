@@ -3,84 +3,88 @@ package net.mehvahdjukaar.modelfix.moonlight_configs;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public abstract class ConfigSpec {
 
-    private static final Map<String, Map<ConfigType, ConfigSpec>> CONFIG_STORAGE = new ConcurrentHashMap<>(); //wack. multithreading mod loading
-
+    private static final Map<ResourceLocation, ConfigSpec> CONFIG_STORAGE = new ConcurrentHashMap<>(); //wack. multithreading mod loading
 
     public static void addTrackedSpec(ConfigSpec spec) {
-        var map = CONFIG_STORAGE.computeIfAbsent(spec.getModId(), n -> new HashMap<>());
-        map.put(spec.getConfigType(), spec);
-    }
-    @Nullable
-    public static ConfigSpec getSpec(String modId, ConfigType type) {
-        var map = CONFIG_STORAGE.get(modId);
-        if (map != null) {
-            return map.getOrDefault(type, null);
+        var old = CONFIG_STORAGE.put(spec.getId(), spec);
+        if (old != null) {
+            throw new IllegalStateException("Duplicate config type for with id " + spec.getId());
         }
-        return null;
     }
 
+    public static Collection<ConfigSpec> getTrackedSpecs() {
+        return CONFIG_STORAGE.values();
+    }
 
+    @Nullable
+    public static ConfigSpec getConfigSpec(ResourceLocation configId) {
+        return CONFIG_STORAGE.get(configId);
+    }
+
+    private final ResourceLocation configId;
     private final String fileName;
-    private final String modId;
+    private final Component readableName;
     private final Path filePath;
     private final ConfigType type;
-    private final boolean synced;
     @Nullable
     private final Runnable changeCallback;
 
-    protected ConfigSpec(ResourceLocation name, Path configDirectory, ConfigType type) {
-        this(name, configDirectory, type, false,null);
-    }
-
-    protected ConfigSpec(ResourceLocation name, Path configDirectory, ConfigType type, boolean synced, @Nullable Runnable changeCallback) {
-        this.fileName = name.getNamespace() + "-" + name.getPath() + ".json";
-        this.modId = name.getNamespace();
+    protected ConfigSpec(ResourceLocation id, String fileExtension, Path configDirectory, ConfigType type, @Nullable Runnable changeCallback) {
+        this.configId = id;
+        this.fileName = id.getNamespace() + "-" + id.getPath() + "." + fileExtension;
         this.filePath = configDirectory.resolve(fileName);
         this.type = type;
-        this.synced = synced;
         this.changeCallback = changeCallback;
+        this.readableName = Component.literal(getReadableName(id.toDebugFileName() + "_configs"));
+
+        ConfigSpec.addTrackedSpec(this);
     }
 
-    protected void onRefresh(){
-        if(this.changeCallback!= null){
+    public Component getReadableName() {
+        return readableName;
+    }
+
+    protected void onRefresh() {
+        if (this.changeCallback != null) {
             this.changeCallback.run();
         }
     }
 
-    public boolean isLoaded(){
+    public boolean isLoaded() {
         return true;
     }
 
-    public abstract void loadFromFile();
-
-    public abstract void register();
+    public abstract void forceLoad();
 
     public ConfigType getConfigType() {
         return type;
     }
 
     public String getModId() {
-        return modId;
+        return configId.getNamespace();
+    }
+
+    public ResourceLocation getId() {
+        return configId;
     }
 
     public boolean isSynced() {
-        return synced;
+        return this.type.isSynced();
     }
 
     public String getFileName() {
@@ -106,13 +110,16 @@ public abstract class ConfigSpec {
     //serverside method
     public abstract boolean hasConfigScreen();
 
-    //send configs from server -> client
-    public void syncConfigsToPlayer(ServerPlayer player) {
+
+    public static class ConfigLoadingException extends RuntimeException {
+        public ConfigLoadingException(ConfigSpec config, Exception cause) {
+            super("Failed to load config file " + config.getFileName() + " of type " + config.getConfigType() + " for mod " + config.getModId() + ". Try deleting it", cause);
+        }
     }
 
-
-    //called on server. sync server -> all clients
-    public void sendSyncedConfigsToAllPlayers() {
+    public static String getReadableName(String name) {
+        return Arrays.stream((name).replace(":", "_").split("_"))
+                .map(StringUtils::capitalize).collect(Collectors.joining(" "));
     }
 
 }

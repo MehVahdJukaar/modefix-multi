@@ -1,4 +1,4 @@
-package net.mehvahdjukaar.modelfix.forge;
+package net.mehvahdjukaar.modelfix.neoforge;
 
 import net.mehvahdjukaar.modelfix.ModelFix;
 import net.neoforged.fml.common.Mod;

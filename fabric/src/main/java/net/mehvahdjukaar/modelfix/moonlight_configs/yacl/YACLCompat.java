@@ -30,11 +30,11 @@ public class YACLCompat {
 
     public static Screen makeScreen(Screen parent, FabricConfigSpec spec, @Nullable ResourceLocation background) {
 
-        spec.loadFromFile();
+        spec.forceLoad();
 
         YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder();
 
-        builder.title(spec.getName());
+        builder.title(spec.getReadableName());
         builder.save(spec::saveConfig);
 
 
