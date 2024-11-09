@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ConfigSpecWrapper extends ConfigSpec{
+public class ConfigSpecWrapper extends ConfigSpec {
 
 
     private static final Method LOAD_CONFIG = ObfuscationReflectionHelper.findMethod(
@@ -40,9 +40,9 @@ public class ConfigSpecWrapper extends ConfigSpec{
     private final Map<ModConfigSpec.ConfigValue<?>, Object> requireRestartValues;
     private final List<ConfigBuilderImpl.ValueWrapper<?, ?>> specialValues;
 
-  public   ConfigSpecWrapper(ResourceLocation name, ModConfigSpec spec, ConfigType type,
-                       @Nullable Runnable onChange, List<ModConfigSpec.ConfigValue<?>> requireRestart,
-                       List<ConfigBuilderImpl.ValueWrapper<?, ?>> specialValues) {
+    public ConfigSpecWrapper(ResourceLocation name, ModConfigSpec spec, ConfigType type,
+                             @Nullable Runnable onChange, List<ModConfigSpec.ConfigValue<?>> requireRestart,
+                             List<ConfigBuilderImpl.ValueWrapper<?, ?>> specialValues) {
         super(name, "toml", FMLPaths.CONFIGDIR.get(), type, onChange);
         this.spec = spec;
         this.specialValues = specialValues;

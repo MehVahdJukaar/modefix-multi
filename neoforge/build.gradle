@@ -64,6 +64,7 @@ remapJar {
     input.set shadowJar.archiveFile
     dependsOn shadowJar
     archiveClassifier = null
+    atAccessWideners.add("${rootProject.mod_id}.accesswidener") // this is a path inside the mod jar
 }
 
 jar {
