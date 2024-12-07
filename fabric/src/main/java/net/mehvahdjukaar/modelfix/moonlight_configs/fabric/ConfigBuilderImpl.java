@@ -4,8 +4,6 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import net.mehvahdjukaar.modelfix.moonlight_configs.ConfigBuilder;
 import net.mehvahdjukaar.modelfix.moonlight_configs.ConfigType;
-import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.ConfigSubCategory;
-import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.FabricConfigSpec;
 import net.mehvahdjukaar.modelfix.moonlight_configs.fabric.values.*;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.http.annotation.Experimental;

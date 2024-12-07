@@ -61,6 +61,7 @@ public class ModelFix {
         });
 
         config = builder.build();
+        config.forceLoad();
     }
 
 

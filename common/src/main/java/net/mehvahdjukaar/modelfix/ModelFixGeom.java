@@ -3,6 +3,7 @@ package net.mehvahdjukaar.modelfix;
 import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.ItemModelGenerator;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.PolarBear;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -27,6 +28,7 @@ public class ModelFixGeom {
 
     public static void createOrExpandSpan(List<ItemModelGenerator.Span> listSpans, ItemModelGenerator.SpanFacing spanFacing,
                                           int pixelX, int pixelY) {
+
         ItemModelGenerator.Span existingSpan = null;
         for (ItemModelGenerator.Span span : listSpans) {
             if (span.getFacing() == spanFacing) {
@@ -52,10 +54,10 @@ public class ModelFixGeom {
     }
 
 
-    public static void enlargeFaces(CallbackInfoReturnable<List<BlockElement>> cir) {
+    public static void enlargeFaces(List<BlockElement> original) {
         double inc = indent.get();
         double inc2 = expansion.get();
-        for (var e : cir.getReturnValue()) {
+        for (var e : original) {
             Vector3f from = e.from;
             Vector3f to = e.to;
 
